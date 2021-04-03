@@ -34,7 +34,7 @@ def find_corresponding_stocks_infosfera_quandl() -> list:
     for company_name, company_code in stock_names_to_codes_infosfera.items():
         if company_code in quandl_possible_codes:
             corresponding_stocks.append({
-                'company_name': company_name,
+                'company_name': company_name.upper(),
                 'company_code': company_code
             })
 
