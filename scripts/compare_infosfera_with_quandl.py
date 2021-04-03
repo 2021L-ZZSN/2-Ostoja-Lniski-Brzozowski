@@ -31,11 +31,11 @@ def find_corresponding_stocks_infosfera_quandl() -> list:
     corresponding_stocks = []
     stock_names_to_codes_infosfera = read_stock_names_to_codes()
     quandl_possible_codes = read_quandl_possible_stock_codes()
-    for stock_name, stock_code in stock_names_to_codes_infosfera.items():
-        if stock_code in quandl_possible_codes:
+    for company_name, company_code in stock_names_to_codes_infosfera.items():
+        if company_code in quandl_possible_codes:
             corresponding_stocks.append({
-                'company_name': stock_name,
-                'company_code': stock_code
+                'company_name': company_name,
+                'company_code': company_code
             })
 
     return corresponding_stocks
