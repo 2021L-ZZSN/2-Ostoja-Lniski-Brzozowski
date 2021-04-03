@@ -17,12 +17,13 @@ def scrape_message_from_infosfera(url, included_companies):
     message = {}
 
     for token in soup.find_all(class_='nTekst'):
+
         if raport_tag in prev_token_text:
             raport_content = token.text.strip()
-            message['content'] = raport_content
-
             if not raport_content:
                 return None
+
+            message['content'] = raport_content
 
         elif company_tag in prev_token_text:
             company_name = token.text.strip().replace('.', '')
@@ -30,7 +31,7 @@ def scrape_message_from_infosfera(url, included_companies):
             if not company_name:
                 return None
 
-            if company_name not in included_companies:
+            if company_name not in included_companies and company_name + ' SA' not in included_companies:
                 return None
 
             message['company_name'] = company_name
@@ -47,35 +48,39 @@ def scrape_message_from_infosfera(url, included_companies):
     return message
 
 
-def get_included_companies(included_companies_path):
-    included_companies = load_json(included_companies_path)
-    included_companies_collection = set()
+def get_included_companies(filepath):
+    included_companies = load_json(filepath)
+    result = set()
     for included_company in included_companies:
         company_name = included_company.get('company_name').upper()
-        included_companies_collection.add(company_name)
+        result.add(company_name)
 
-    return included_companies_collection
+    return result
 
 
-start_id = 468320
-end_id = 468330
-url_base = 'http://infostrefa.com/espi/pl/reports/view/4,'
-messages = []
-failed_counter = 0
+def scrape_sources_with_given_ids(url_base, first_included, first_excluded):
 
-included_companies_path = 'data/corresponding_stocks.json'
-included_companies_collection = get_included_companies(included_companies_path)
-for i in tqdm(range(end_id - start_id)):
+    messages = []
+    failed_counter = 0
+    requests_in_row = 10
+    request_pause = 30
 
-    url = url_base + str(start_id + i)
-    message = scrape_message_from_infosfera(url, included_companies_collection)
-    if message:
-        messages.append(message)
-    else:
-        failed_counter = failed_counter + 1
+    for i in tqdm(range(first_excluded - first_included)):
 
-    start_id = start_id + 1
-    time.sleep(30)
+        url = url_base + str(first_included + i)
+        message = scrape_message_from_infosfera(url, get_included_companies('data/corresponding_stocks.json'))
+        if message:
+            messages.append(message)
+        else:
+            failed_counter = failed_counter + 1
 
-write_json('data/infosfera/scrapped_messages.json', messages)
-print('Nie pobrano danych dla ', failed_counter, ' firm')
+        if i % requests_in_row == requests_in_row - 1:
+            time.sleep(request_pause)
+
+    print('Nie pobrano danych dla ', failed_counter, ' firm')
+    return messages
+
+
+if __name__ == '__main__':
+    scraped_data = scrape_sources_with_given_ids('http://infostrefa.com/espi/pl/reports/view/4,', 468220, 468330)
+    write_json('data/infosfera/scrapped_messages.json', scraped_data)
