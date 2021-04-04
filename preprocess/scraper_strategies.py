@@ -149,7 +149,10 @@ def _scrape_company_name_from_a_given_day(tags) -> str or None:
 if __name__ == '__main__':
     year_start = 2015
     year_end = 2015
-    for company_name in COMPANY_NAME_TO_ID:
-        print(f'Scraping dispatches for: {company_name} from {year_start} to {year_end}')
-        company_infos = scrape_dispatches_for_company(company_name, year_start=year_start, year_end=year_end)
-        write_json(f'{company_name}.json', company_infos)
+    first_idx_included = 0
+    first_idx_exluded = 10
+    for i, company_name in enumerate(COMPANY_NAME_TO_ID):
+        if first_idx_included <= i < first_idx_exluded:
+            print(f'Scraping dispatches for: {company_name} from {year_start} to {year_end}')
+            company_infos = scrape_dispatches_for_company(company_name, year_start=year_start, year_end=year_end)
+            write_json(f'{company_name}.json', company_infos)
