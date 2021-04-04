@@ -77,4 +77,4 @@ def _calculate_score_using_formula(x1: float, x2: float, y1: float, y2: float):
 
 
 if __name__ == '__main__':
-    print(compare_stock_prices_for_company_name_to_wig('MCI CAPITAL ASI SA', '2021-04-02'))
+    print(compare_stock_prices_for_company_name_to_wig('CAPITAL PARK SA', '2019-05-13'))
