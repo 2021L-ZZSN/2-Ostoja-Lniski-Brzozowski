@@ -31,7 +31,7 @@ def scrape_dispatch_from_url(url) -> dict:
 
     dispatch['date'] = _get_date(page_root)
 
-    if 'content' not in dispatch or 'company_name' not in dispatch or 'date' not in 'company_info':
+    if 'content' not in dispatch or 'company_name' not in dispatch or 'date' not in dispatch:
         raise ScrapperError('Data incomplete.')
 
     return dispatch
