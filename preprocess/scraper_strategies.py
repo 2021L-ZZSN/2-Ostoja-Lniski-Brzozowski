@@ -119,7 +119,7 @@ def _scrape_company_dispatches_from_a_given_day(tags) -> List[dict]:
         tags_to_scrape = [tag for tag in hreftags if tag['href'].startswith('http://')]
         for tag in tags_to_scrape:
             try:
-                time.sleep(5000)
+                # time.sleep(2)
                 company_dispatches.append(scrape_dispatch_from_url(url=tag['href']))
             except ScrapperError:
                 pass
@@ -150,8 +150,8 @@ def _scrape_company_name_from_a_given_day(tags) -> str or None:
 if __name__ == '__main__':
     year_start = 2015
     year_end = 2015
-    first_idx_included = 22
-    first_idx_exluded = 24
+    first_idx_included = 39
+    first_idx_exluded = 40
     for i, company_name in enumerate(COMPANY_NAME_TO_ID):
         if first_idx_included <= i < first_idx_exluded:
             print(f'Scraping dispatches for: {company_name} from {year_start} to {year_end}')
