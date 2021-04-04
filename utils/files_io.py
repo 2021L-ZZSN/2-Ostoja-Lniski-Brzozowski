@@ -27,18 +27,9 @@ def merge_jsons_from_dirs(out_path, *in_paths):
         merge_jsons_from_dir(out_path, in_path)
 
 
-def _init_merged_content(out_path):
-    if os.path.exists(out_path):
-        init_content = load_json(out_path)
-    else:
-        init_content = []
-
-    return init_content
-
-
 def merge_jsons_from_dir(out_path, in_path):
 
-    merged_jsons = _init_merged_content(out_path)
+    merged_jsons = load_json(out_path) if os.path.exists(out_path) else []
     for filename in os.listdir(in_path):
         if filename.endswith(".json"):
             json_data = load_json(in_path + '/' + filename)
