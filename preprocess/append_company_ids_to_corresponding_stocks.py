@@ -20,9 +20,6 @@ def add_infosfera_ids_to_corresponding_stocks(corresponding_stocks: List[dict], 
 
 
 if __name__ == '__main__':
-    # infosfera = add_infosfera_ids_to_corresponding_stocks(load_json(CORRESPONDING_STOCKS_PATH))
-    # print(infosfera)
-    # print(len(infosfera))
-    x = load_json(COMPANY_NAME_TO_ID_PATH)
-    x = {k.upper(): v for k, v in x.items()}
-    write_json('data/infosfera/asd.json', x)
+    infosfera = add_infosfera_ids_to_corresponding_stocks(load_json(CORRESPONDING_STOCKS_PATH))
+    write_json('data/corresponding_stocks.json', infosfera)
+    print(len(infosfera))
