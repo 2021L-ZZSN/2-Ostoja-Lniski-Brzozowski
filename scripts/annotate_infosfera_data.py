@@ -7,8 +7,10 @@ from utils.files_io import write_json
 from stock_prices import compare_stock_prices_for_company_name_to_wig, QuandlError
 
 
-def annotate_data_from_dir(src_dir: str, target_dir: str):
+def annotate_data_from_dir(src_dir: str, target_dir: str, start_with_letter='a'):
     file_names = [f for f in os.listdir(src_dir) if os.path.isfile(os.path.join(src_dir, f))]
+    file_names.sort()
+    file_names = [fn for fn in file_names if fn[0:len(start_with_letter)].lower() >= start_with_letter]
     for file_name in file_names:
         annotate_infosfera_file(f'{src_dir}/{file_name}', target_dir)
 
