@@ -33,8 +33,8 @@ def get_stock_prices(company_code: str, stock_dispatch_date: str, stock_exchange
     next_working_day_data = quandl.get(f'{stock_exchange_name}/{company_code}',
                                        start_date=next_working_day(stock_dispatch_date),
                                        end_date=next_working_day(stock_dispatch_date))
-    assert len(previous_working_day_data) == len(next_working_day_data) == 1, \
-        'Some data must be missing! Check if it\'s not a holiday'
+    if not (len(previous_working_day_data) == len(next_working_day_data) == 1):
+        raise QuandlError('Some data must be missing! Check if it\'s not a holiday')
 
     return {
         'previous_day': previous_working_day_data.iloc[0]['Close'],
@@ -74,6 +74,10 @@ def _calculate_score_using_formula(x1: float, x2: float, y1: float, y2: float):
         - y means some index (usually wig) price
     """
     return ((x2 - x1) / x1) - ((y2 - y1) / y1)
+
+
+class QuandlError(Exception):
+    pass
 
 
 if __name__ == '__main__':
