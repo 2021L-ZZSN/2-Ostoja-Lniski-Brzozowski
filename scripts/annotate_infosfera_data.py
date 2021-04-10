@@ -7,10 +7,11 @@ from utils.files_io import write_json
 from stock_prices import compare_stock_prices_for_company_name_to_wig, QuandlError
 
 
-def annotate_data_from_dir(src_dir: str, target_dir: str, start_from='a'):
+def annotate_data_from_dir(src_dir: str, target_dir: str, start_from='a', end_with='z'):
     file_names = [f for f in os.listdir(src_dir) if os.path.isfile(os.path.join(src_dir, f))]
     file_names.sort()
     file_names = [fn for fn in file_names if fn[0:len(start_from)].lower() >= start_from]
+    file_names = [fn for fn in file_names if fn[0:len(end_with)].lower() <= end_with]
     for file_name in file_names:
         annotate_infosfera_file(f'{src_dir}/{file_name}', target_dir)
 
@@ -51,4 +52,5 @@ def _merge_infosfera_quandl_to_create_dataset(company_dispatches: List[dict]) ->
 if __name__ == '__main__':
     annotate_data_from_dir(src_dir='data/robert_data',
                            target_dir='data/annotated/robert_data',
-                           start_from='a')
+                           start_from='a',
+                           end_with='pcc')
