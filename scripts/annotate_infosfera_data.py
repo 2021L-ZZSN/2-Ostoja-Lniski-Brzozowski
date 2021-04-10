@@ -38,7 +38,7 @@ def _merge_infosfera_quandl_to_create_dataset(company_dispatches: List[dict]) ->
                 'sentiment': sentiment
             })
         except QuandlError:
-            pass
+            print(f'{dispatch["company_name"]} has no records in quandl for this date.')
         except KeyError:
             print(f'{dispatch["company_name"]} not found in company name list. Aborting download.')
             break
@@ -47,5 +47,4 @@ def _merge_infosfera_quandl_to_create_dataset(company_dispatches: List[dict]) ->
 
 
 if __name__ == '__main__':
-    # annotate_data_from_dir('path/to/src_dir', 'path/to/annotated_dir')
-    pass
+    annotate_data_from_dir('data/robert_data', 'data/annotated/robert_data')
