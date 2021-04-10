@@ -12,6 +12,7 @@ DOTTED_DATE_REGEX = re.compile('\d\d\.\d\d\.\d\d\d\d')
 
 MIN_POSSIBLE_YEAR = 2004
 MAX_POSSIBLE_YEAR = 2021
+SLEEP_TIME = 15
 
 CORRESPONDING_STOCKS = load_json('data/corresponding_stocks.json')
 COMPANY_NAME_TO_ID = {el['company_name']: el['company_infosfera_id'] for el in CORRESPONDING_STOCKS}
@@ -119,7 +120,7 @@ def _scrape_company_dispatches_from_a_given_day(tags) -> List[dict]:
         tags_to_scrape = [tag for tag in hreftags if tag['href'].startswith('http://')]
         for tag in tags_to_scrape:
             try:
-                # time.sleep(2)
+                time.sleep(SLEEP_TIME)
                 company_dispatches.append(scrape_dispatch_from_url(url=tag['href']))
             except ScrapperError:
                 pass
@@ -148,10 +149,11 @@ def _scrape_company_name_from_a_given_day(tags) -> str or None:
 
 
 if __name__ == '__main__':
-    year_start = 2015
-    year_end = 2015
-    first_idx_included = 39
-    first_idx_exluded = 40
+    year_start = 2017
+    year_end = 2018
+    first_idx_included = 250
+    first_idx_exluded = 428
+
     for i, company_name in enumerate(COMPANY_NAME_TO_ID):
         if first_idx_included <= i < first_idx_exluded:
             print(f'Scraping dispatches for: {company_name} from {year_start} to {year_end}')
