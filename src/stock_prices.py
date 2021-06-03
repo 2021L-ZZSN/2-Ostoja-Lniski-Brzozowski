@@ -1,7 +1,7 @@
 import quandl
 
-from src.utils.dates import previous_working_day, next_working_day
-from src.utils.files_io import load_json
+from src.common.utils.dates import previous_working_day, next_working_day
+from src.common.utils.files_io import load_json
 
 api_key = load_json('data/quandl/quandl_auth.json')['apikey']
 quandl.ApiConfig.api_key = api_key

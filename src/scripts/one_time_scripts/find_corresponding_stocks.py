@@ -1,6 +1,6 @@
 from typing import Set, List, Dict
 
-from src.utils.files_io import write_json
+from src.common.utils.files_io import write_json
 
 STOCK_NAMES_TO_CODES_PATH = 'data/infosfera/stock_names_to_codes.csv'
 QUANDL_METADATA_PATH = 'data/quandl/WSE_metadata.csv'

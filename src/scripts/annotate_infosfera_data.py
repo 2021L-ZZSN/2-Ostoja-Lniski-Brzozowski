@@ -4,8 +4,8 @@ from typing import List
 from click import STRING
 from tqdm import tqdm
 import os
-from src.utils.files_io import load_json
-from src.utils.files_io import write_json
+from src.common.utils.files_io import load_json
+from src.common.utils.files_io import write_json
 from src.stock_prices import compare_stock_prices_for_company_name_to_wig, QuandlError
 import click
 

@@ -3,7 +3,7 @@ from typing import Set
 import requests
 from bs4 import BeautifulSoup
 
-from src.utils.files_io import load_json
+from src.common.utils.files_io import load_json
 
 DEFAULT_INCLUDED_COMPANIES_PATH = 'data/corresponding_stocks.json'
 HTTP_OK = 200

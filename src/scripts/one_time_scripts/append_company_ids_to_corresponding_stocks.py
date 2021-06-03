@@ -1,6 +1,6 @@
 from typing import List
 
-from src.utils.files_io import load_json, write_json
+from src.common.utils.files_io import load_json, write_json
 
 CORRESPONDING_STOCKS_PATH = 'data/corresponding_stocks.json'
 COMPANY_NAME_TO_ID_PATH = 'data/infosfera/company_name_to_id_raw.json'
