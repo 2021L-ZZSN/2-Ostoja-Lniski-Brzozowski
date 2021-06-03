@@ -7,8 +7,8 @@ import re
 
 from src.common.consts import COMPANY_NAME_TO_ID
 from src.common.stock_dispatch import StockExchangeDispatch
-from src.scraper.scrapers import scrape_dispatch_from_url, scrape_dispatch_from_url_within_included_companies
-from src.scraper.scraper_utils import get_included_companies, ScrapperError, get_page_root
+from src.api.scraper.scrapers import scrape_dispatch_from_url, scrape_dispatch_from_url_within_included_companies
+from src.api.scraper.scraper_utils import get_included_companies, ScrapperError, get_page_root
 
 DOTTED_DATE_REGEX = re.compile('\d\d\.\d\d\.\d\d\d\d')
 

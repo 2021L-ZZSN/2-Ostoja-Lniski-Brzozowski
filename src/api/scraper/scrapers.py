@@ -2,7 +2,7 @@ import re
 from typing import Set
 
 from src.common.stock_dispatch import StockExchangeDispatch
-from src.scraper.scraper_utils import ScrapperError, get_page_root
+from src.api.scraper.scraper_utils import ScrapperError, get_page_root
 
 _COMPANY_NAME = 'Skrócona nazwa emitenta'
 _REPORT_TAG = 'Treść raportu'

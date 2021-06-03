@@ -1,21 +1,19 @@
 import quandl
 
+from src.common.consts import COMPANY_NAME_TO_CODE
 from src.common.utils.dates import previous_working_day, next_working_day
 from src.common.utils.files_io import load_json
 
 api_key = load_json('data/quandl/quandl_auth.json')['apikey']
 quandl.ApiConfig.api_key = api_key
 
-corresponding_stocks = load_json('data/corresponding_stocks.json')
-
-company_name_to_code = {el['company_name']: el['company_code'] for el in corresponding_stocks}
 
 
 def get_stock_prices_for_company_name(
         company_name: str,
         stock_dispatch_date: str,
         stock_exchange_name: str = 'WSE') -> dict:
-    company_code = company_name_to_code[company_name]
+    company_code = COMPANY_NAME_TO_CODE[company_name]
     return get_stock_prices(company_code, stock_dispatch_date, stock_exchange_name)
 
 
@@ -46,7 +44,7 @@ def compare_stock_prices_for_company_name_to_wig(
         company_name: str,
         stock_dispatch_date: str,
         stock_exchange_name: str = 'WSE') -> float:
-    company_code = company_name_to_code[company_name]
+    company_code = COMPANY_NAME_TO_CODE[company_name]
     return compare_stock_prices_to_wig(
         company_code=company_code,
         stock_dispatch_date=stock_dispatch_date,

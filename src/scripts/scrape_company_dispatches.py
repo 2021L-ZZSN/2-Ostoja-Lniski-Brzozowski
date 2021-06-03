@@ -6,7 +6,7 @@ from click import INT, STRING
 import os
 from src.common.consts import COMPANY_NAME_TO_ID
 from src.common.utils.files_io import write_json
-from src.scraper import scrape_dispatches_for_company
+from src.api.scraper import scrape_dispatches_for_company
 
 
 def _store_scrape_for_company(
