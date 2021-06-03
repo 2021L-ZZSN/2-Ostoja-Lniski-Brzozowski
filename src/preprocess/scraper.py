@@ -1,7 +1,7 @@
 import re
 from typing import Set
 
-from preprocess.scraper_utils import ScrapperError, get_page_root
+from src.preprocess.scraper_utils import ScrapperError, get_page_root
 
 COMPANY_NAME = 'Skrócona nazwa emitenta'
 REPORT_TAG = 'Treść raportu'

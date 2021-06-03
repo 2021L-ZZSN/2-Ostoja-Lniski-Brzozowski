@@ -4,9 +4,9 @@ from typing import List
 from bs4.element import Tag
 from tqdm import tqdm
 import re
-from preprocess.scraper import scrape_dispatch_from_url, scrape_dispatch_from_url_within_included_companies
-from preprocess.scraper_utils import get_included_companies, ScrapperError, get_page_root
-from utils.files_io import write_json, load_json
+from src.preprocess.scraper import scrape_dispatch_from_url, scrape_dispatch_from_url_within_included_companies
+from src.preprocess.scraper_utils import get_included_companies, ScrapperError, get_page_root
+from src.utils.files_io import write_json, load_json
 
 DOTTED_DATE_REGEX = re.compile('\d\d\.\d\d\.\d\d\d\d')
 
