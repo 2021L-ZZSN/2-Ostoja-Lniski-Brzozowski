@@ -1,12 +1,9 @@
 import quandl
 
-from src.common.consts import COMPANY_NAME_TO_CODE
+from src.common.consts import COMPANY_NAME_TO_CODE, QUANDL_API_KEY
 from src.common.utils.dates import previous_working_day, next_working_day
-from src.common.utils.files_io import load_json
 
-api_key = load_json('data/quandl/quandl_auth.json')['apikey']
-quandl.ApiConfig.api_key = api_key
-
+quandl.ApiConfig.api_key = QUANDL_API_KEY
 
 
 def get_stock_prices_for_company_name(
@@ -77,6 +74,3 @@ def _calculate_score_using_formula(x1: float, x2: float, y1: float, y2: float):
 class QuandlError(Exception):
     pass
 
-
-if __name__ == '__main__':
-    print(compare_stock_prices_for_company_name_to_wig('CAPITAL PARK SA', '2019-05-13'))
