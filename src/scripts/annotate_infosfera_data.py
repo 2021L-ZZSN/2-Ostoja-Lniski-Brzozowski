@@ -1,9 +1,12 @@
+from dataclasses import asdict
 from pathlib import Path
 from typing import List
 
 from click import STRING
 from tqdm import tqdm
 import os
+
+from src.common.stock_dispatch import StockExchangeDispatch
 from src.common.utils.files_io import load_json
 from src.common.utils.files_io import write_json
 from src.api.stock_prices import compare_stock_prices_for_company_name_to_wig, QuandlError
@@ -48,26 +51,42 @@ def annotate_infosfera_file(src_path: str, target_dir: str) -> None:
     target_infosfera_file_name = f'{infosfera_file_name}_annotated.json'
 
     infosfera_data = load_json(src_path)
-    annotated_data = _merge_infosfera_using_quadl_stock_prices(infosfera_data)
+    infosfera_dispatches = [StockExchangeDispatch(
+        infosfera_dispatch['company_name'],
+        infosfera_dispatch['content'],
+        infosfera_dispatch['date']
+    ) for infosfera_dispatch in infosfera_data]
+    annotated_dispatches = _merge_infosfera_using_quadl_stock_prices(infosfera_dispatches)
     os.makedirs(target_dir, exist_ok=True)
-    write_json(f'{target_dir}/{target_infosfera_file_name}', annotated_data)
+    write_json(f'{target_dir}/{target_infosfera_file_name}',
+               [asdict(annotated_dispatch) for annotated_dispatch in annotated_dispatches])
 
 
-def _merge_infosfera_using_quadl_stock_prices(company_dispatches: List[dict]) -> List[dict]:
+def _merge_infosfera_using_quadl_stock_prices(
+        company_dispatches: List[StockExchangeDispatch]) -> List[StockExchangeDispatch]:
+    """
+    Fills in the sentiment of StockExchangeDispatch objects.
+    :param company_dispatches StockExchangeDispatch objects without sentiment field.
+    :return: StockExchangeDispatch objects with sentiment field.
+    """
     company_dataset = []
     for dispatch in tqdm(company_dispatches):
         try:
             sentiment = compare_stock_prices_for_company_name_to_wig(
-                company_name=dispatch['company_name'],
-                stock_dispatch_date=dispatch['date'])
-            company_dataset.append({
-                **dispatch,
-                'sentiment': sentiment
-            })
+                company_name=dispatch.company_name,
+                stock_dispatch_date=dispatch.date)
+            company_dataset.append(
+                StockExchangeDispatch(
+                    dispatch.company_name,
+                    dispatch.content,
+                    dispatch.date,
+                    sentiment
+                )
+            )
         except QuandlError:
-            print(f'{dispatch["company_name"]} has no records in quandl for this date.')
+            print(f'{dispatch.company_name} has no records in quandl for this date.')
         except KeyError:
-            print(f'{dispatch["company_name"]} not found in company name list. Aborting download.')
+            print(f'{dispatch.company_name} not found in company name list. Aborting download.')
             break
 
     return company_dataset
@@ -103,7 +122,7 @@ def _merge_infosfera_using_quadl_stock_prices(company_dispatches: List[dict]) ->
     help="Letter(s) to which the annotation will be performed (inclusive)."
 )
 def main(
-    input_dir: Path, output_dir: Path, start_from: STRING, end_with: STRING
+        input_dir: Path, output_dir: Path, start_from: STRING, end_with: STRING
 ) -> None:
     annotate_infosfera_files_from_dir(
         src_dir=str(input_dir),
