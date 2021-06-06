@@ -1,4 +1,4 @@
-from transformers import AutoTokenizer, Trainer, BertForSequenceClassification, TrainingArguments
+from transformers import AutoTokenizer, Trainer, BertForSequenceClassification, BertConfig, TrainingArguments
 from src.common.data_preparation import KlejType, read_klej
 import torch
 
@@ -49,7 +49,12 @@ training_args = TrainingArguments(
     logging_steps=10,
 )
 
-model = BertForSequenceClassification.from_pretrained(MODEL_USED)
+
+config = BertConfig.from_pretrained(MODEL_USED)
+config.num_labels = 4
+model = BertForSequenceClassification(config)
+print(model.parameters)
+# exit()
 
 trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
