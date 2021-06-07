@@ -28,7 +28,7 @@ def get_klej_datasets(
         klej_labels: Tuple[str, ...] = ("positive", "negative", "neutral"),
         validation_size: float = 0.1,
         random_state: int = 42,
-) -> Tuple[TorchDataset, TorchDataset, TorchDataset]:
+) -> Tuple[SentimentAnalysisDataset, SentimentAnalysisDataset, SentimentAnalysisDataset]:
     """
     Returns train, dev, test datasets ready to pass into Trainer API for transformers.
     :param tokenizer: Transformers tokenizer.
