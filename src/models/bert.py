@@ -3,7 +3,7 @@ from transformers import AutoTokenizer, Trainer, BertForSequenceClassification, 
 from src.common.data_preparation import KlejType
 from src.models import MODEL_USED
 from src.models.metrics import compute_metrics
-from src.models.datasets import get_klej_datasets
+from src.models.datasets import KlejDataset, FinancialDataset
 
 OUTPUT_DIR = "my_model"
 
@@ -11,10 +11,10 @@ OUTPUT_DIR = "my_model"
 def main():
     tokenizer = AutoTokenizer.from_pretrained(MODEL_USED)
 
-    train_dataset, val_dataset, test_dataset = get_klej_datasets(
-        tokenizer=tokenizer,
-        klej_type=KlejType.IN,
-    )
+    # dataset = KlejDataset(tokenizer=tokenizer, klej_type=KlejType.IN)
+    dataset = FinancialDataset(tokenizer=tokenizer, positive_threshold=0.012, negative_threshold=-0.033,
+                               shuffle_companies=False)
+    train_dataset, val_dataset, test_dataset = dataset.get()
 
     training_args = TrainingArguments(
         output_dir='./results',
