@@ -8,3 +8,4 @@ COMPANY_NAME_TO_CODE = {el['company_name']: el['company_code'] for el in CORRESP
 QUANDL_AUTH_FILE = "data/quandl/quandl_auth.json"
 QUANDL_API_KEY = load_json(QUANDL_AUTH_FILE)['apikey']
 
+RANDOM_STATE = 42

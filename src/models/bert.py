@@ -4,11 +4,26 @@ from src.common.consts import RANDOM_STATE
 from src.common.data_preparation import KlejType, read_klej
 import torch
 from sklearn.model_selection import train_test_split
+from sklearn import metrics
+import numpy as np
 from src.models import MODEL_USED
+
 VALIDATION_SIZE = 0.1
 tokenizer = AutoTokenizer.from_pretrained(MODEL_USED)
 klej_in = read_klej(KlejType.IN, ("positive", "negative", "neutral"))
 train_data, test_data = klej_in["train"], klej_in["dev"]
+
+
+def compute_metrics(eval_pred):
+    logits, labels = eval_pred
+    predictions = np.argmax(logits, axis=-1)
+    return {
+        "f1": metrics.f1_score(y_pred=predictions, y_true=labels, average="weighted"),
+        "recall": metrics.recall_score(y_pred=predictions, y_true=labels, average="weighted"),
+        "precision": metrics.precision_score(y_pred=predictions, y_true=labels, average="weighted"),
+        "accuracy": metrics.accuracy_score(y_pred=predictions, y_true=labels)
+    }
+
 
 train_data, val_data = train_test_split(
     train_data,
@@ -16,12 +31,11 @@ train_data, val_data = train_test_split(
     random_state=RANDOM_STATE,
     stratify=[d["label"] for d in train_data])
 
-train_texts = [d["text"] for d in train_data]
-train_labels = [d["label"] for d in train_data]
+train_texts = [d["text"] for d in train_data][:5]
+train_labels = [d["label"] for d in train_data][:5]
 
 val_texts = [d["text"] for d in train_data]
 val_labels = [d["label"] for d in train_data]
-
 
 test_texts = [d["text"] for d in test_data]
 test_labels = [d["label"] for d in test_data]
@@ -56,24 +70,29 @@ val_dataset = KlejDataset(val_encodings, val_labels)
 test_dataset = KlejDataset(test_encodings, test_labels)
 
 training_args = TrainingArguments(
-    output_dir='./results',          # output directory
-    num_train_epochs=3,              # total number of training epochs
+    output_dir='./results',  # output directory
+    num_train_epochs=3,  # total number of training epochs
     per_device_train_batch_size=16,  # batch size per device during training
-    per_device_eval_batch_size=64,   # batch size for evaluation
-    warmup_steps=500,                # number of warmup steps for learning rate scheduler
-    weight_decay=0.01,               # strength of weight decay
-    logging_dir='./logs',            # directory for storing logs
+    per_device_eval_batch_size=64,  # batch size for evaluation
+    warmup_steps=500,  # number of warmup steps for learning rate scheduler
+    weight_decay=0.01,  # strength of weight decay
+    logging_dir='./logs',  # directory for storing logs
     logging_steps=10,
 )
 
 model = BertForSequenceClassification.from_pretrained(MODEL_USED, num_labels=3)
 
-
 trainer = Trainer(
-    model=model,                         # the instantiated 🤗 Transformers model to be trained
-    args=training_args,                  # training arguments, defined above
-    train_dataset=train_dataset,         # training dataset
-    eval_dataset=val_dataset             # evaluation dataset
+    model=model,  # the instantiated 🤗 Transformers model to be trained
+    args=training_args,  # training arguments, defined above
+    train_dataset=train_dataset,  # training dataset
+    eval_dataset=val_dataset,  # evaluation dataset
+    compute_metrics=compute_metrics,
+
 )
 
 trainer.train()
+
+trainer.save_model("model")
+
+print(trainer.evaluate(eval_dataset=test_dataset))
