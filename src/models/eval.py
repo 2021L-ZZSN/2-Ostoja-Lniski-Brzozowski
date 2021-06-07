@@ -2,7 +2,7 @@ from typing import Dict, List, Tuple, Union
 
 import numpy as np
 from transformers import PreTrainedModel, PreTrainedTokenizer
-
+from tqdm import tqdm
 from src.common.data_preparation import KlejType
 from src.models.datasets import get_klej_test_set
 from src.models.metrics import compute_metrics, get_classification_report, get_confusion_matrix
@@ -31,7 +31,7 @@ def evaluate(
     if not texts:
         return {}
     predictions = []
-    for text in texts:
+    for text in tqdm(texts):
         prediction = _gather_prediction(text, tokenizer, model)
         predictions.append(prediction)
     predictions = np.squeeze(np.array(predictions), axis=1)
