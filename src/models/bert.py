@@ -38,6 +38,10 @@ def main():
 
     trainer.train()
 
-    trainer.save_model("model")
+    trainer.save_model("model_refactored")
 
     print(trainer.evaluate(eval_dataset=test_dataset))
+
+
+if __name__ == "__main__":
+    main()
