@@ -47,7 +47,7 @@ class Dataset(ABC):
         val_texts, val_labels = _get_texts_labels_from_data(val_data)
         test_texts, test_labels = _get_texts_labels_from_data(test_data)
 
-        label_mapper = {label: i for i, label in enumerate(set(train_labels))}
+        label_mapper = {label: i for i, label in enumerate(("positive", "negative", "neutral"))}
 
         train_labels = [label_mapper[label] for label in train_labels]
         val_labels = [label_mapper[label] for label in val_labels]
