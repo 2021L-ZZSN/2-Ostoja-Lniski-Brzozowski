@@ -6,7 +6,6 @@ from src.common.utils.files_io import load_json
 
 random.seed(42)
 
-
 DatasetLike = List[Dict[str, Union[str, int]]]
 
 ENDING_CHARS_LEN = len("_annotated.json")
@@ -21,7 +20,7 @@ def generate_financial_dataset(
         annotated_data_dir: str = "data/annotated"
 ) -> Tuple[DatasetLike, DatasetLike, DatasetLike]:
     """
-    Generates a dataset
+    Generates a tuple of datasets
     :param positive_threshold: A threshold for "sentiment" attribute from which
     we say that the StockExchangeDispatch is a positive one.
     :param negative_threshold: A threshold for "sentiment" attribute to which
@@ -38,30 +37,119 @@ def generate_financial_dataset(
         "label": "positive / neutral / negative"
     }
     """
-    data_counter = 0
-    annotated_companies: Dict[str, DatasetLike] = {}  # name of a company to dataset.
-    for filename in os.listdir(annotated_data_dir):
-        fp = f"{annotated_data_dir}/{filename}"
-        annotated_company = load_json(fp)
-        annotated_companies[filename[:ENDING_CHARS_LEN]] = annotated_company
-        data_counter += len(annotated_company)
 
+    if test_size < 0 or val_size < 0 or test_size + val_size >= 1:
+        raise ValueError('Test size and val size should be non-negative and sum up to less than one')
+
+    annotated_data_num = 0
+    annotated_companies_data: Dict[str, DatasetLike] = {}  # name of a company to dataset.
+    for filename in os.listdir(annotated_data_dir):
+        file_path = f"{annotated_data_dir}/{filename}"
+        annotated_companies = load_json(file_path)
+
+        for annotated_company in annotated_companies:
+            company_name, content, sentiment = _read_single_annotated_data_file(
+                annotated_company, positive_threshold, negative_threshold)
+
+            if company_name not in annotated_companies_data.keys():
+                annotated_companies_data[company_name] = []
+
+            annotated_companies_data[company_name].append({'text': content, 'label': sentiment})
+            annotated_data_num += 1
+
+    train_data = []
+    val_data = []
+    test_data = []
+
+    # Shuffle companies means that the companies are shuffled between train / dev / test sets.
+    # Here, the datasets are shuffled, but the company data stays together.
+    # So the result will be that company A is in train set, company B is in dev set,
+    # company C is in test set.
     if not shuffle_companies:
-        company_names = [company_name for company_name in annotated_companies]
-        # Shuffle companies means that the companies are shuffled between train / dev / test sets.
-        # Here, the datasets are shuffled, but the company data stays together.
-        # So the result will be that company A is in train set, company B is in dev set,
-        # company C is in test set.
+        company_names = [company_name for company_name in annotated_companies_data]
         random.shuffle(company_names)
-        test_data_amount = test_size * data_counter
-        val_data_amount = val_size * data_counter
+
+        next_id = 0
+        next_id, test_data = _get_non_shuffled_required_data(annotated_companies_data, company_names,
+                                                             next_id, annotated_data_num * test_size)
+
+        next_id, val_data = _get_non_shuffled_required_data(annotated_companies_data, company_names,
+                                                            next_id, annotated_data_num * val_size)
+
+        _, train_data = _get_non_shuffled_required_data(annotated_companies_data, company_names,
+                                                        next_id, annotated_data_num)
+
+        return train_data, test_data, val_data
 
     if shuffle_companies:
         annotated_data = []
-        for annotated_company in annotated_companies:
-            annotated_data.extend(annotated_companies[annotated_company])
+        for annotated_company in annotated_companies_data:
+            annotated_data.extend(annotated_companies_data[annotated_company])
         random.shuffle(annotated_data)
 
+
+def _read_single_annotated_data_file(
+        annotated_company: dict,
+        positive_threshold: float,
+        negative_threshold: float):
+    """
+    Reads the content of annotated data file
+    :param annotated_company: current company
+    :param positive_threshold: Lowest value for positive sentiment
+    :param negative_threshold: Highest value for negative sentiment
+    :return: company_name, content, sentiment
+    """
+    company_name = annotated_company['company_name']
+    report_content = annotated_company['content']
+    sentiment_value = annotated_company['sentiment']
+    sentiment_label = _apply_label_for_sentiment(sentiment_value, positive_threshold, negative_threshold)
+
+    return company_name, report_content, sentiment_label
+
+
+def _get_non_shuffled_required_data(
+        annotated_companies_data: Dict[str, DatasetLike],
+        companies: list,
+        company_id: int,
+        requirement: float):
+    """
+    Returns data starting from a company of given id, until requirement is met
+    :param companies: A dictionary of annotations for given company
+    :param companies: Companies to be analysed
+    :param company_id: Highest value for negative sentiment
+    :param requirement: minimal number of needed annotated data items
+    :return: first not analysed company, List of dicts containing content and message for given company
+    """
+    companies_data = []
+    current_data_size = 0
+    while current_data_size < requirement and company_id < len(companies):
+        company_name = companies[company_id]
+        annotated_info = annotated_companies_data[company_name]
+        companies_data += _generate_company_full_data(annotated_companies_data, company_name)
+
+        current_data_size += len(annotated_info)
+        company_id += 1
+
+    return company_id, companies_data
+
+
+def _generate_company_full_data(
+        annotated_companies_data: Dict[str, DatasetLike],
+        company_name: str
+):
+    """
+    Returns full annotated information for given company name
+    :param annotated_companies_data: Annotated companies
+    :param company_name: Company name
+    :return: List of dicts containing content and message for given company
+    """
+
+    company_full_data = []
+    for company_data in annotated_companies_data[company_name]:
+        company_full_data.append({'text': company_data['text'],
+                                  'label': company_data['label']})
+
+    return company_full_data
 
 
 def _create_labels_for_data(
@@ -94,4 +182,4 @@ def _apply_label_for_sentiment(
 
 
 if __name__ == '__main__':
-    generate_financial_dataset(0.05, negative_threshold=-0.05, shuffle_companies=True)
+    generate_financial_dataset(0.05, negative_threshold=-0.05, shuffle_companies=False)
