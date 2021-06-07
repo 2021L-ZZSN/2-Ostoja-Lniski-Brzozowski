@@ -70,6 +70,6 @@ def get_klej_datasets(
 
 def _get_texts_labels_from_data(
         data: List[Dict[str, Union[str, int]]]) -> Tuple[List[str], List[int]]:
-    texts = [d["text"] for d in data][:10]
-    labels = [d["label"] for d in data][:10]
+    texts = [d["text"] for d in data]
+    labels = [d["label"] for d in data]
     return texts, labels
