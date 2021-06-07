@@ -4,7 +4,7 @@ from random import shuffle, random
 import random
 from src.common.utils.files_io import load_json
 
-random.seed(42)
+
 
 DatasetLike = List[Dict[str, Union[str, int]]]
 
@@ -17,6 +17,7 @@ def generate_financial_dataset(
         shuffle_companies: bool,
         test_size: float = 0.2,
         val_size: float = 0.1,
+        random_state: int = 42,
         annotated_data_dir: str = "data/annotated"
 ) -> Tuple[DatasetLike, DatasetLike, DatasetLike]:
     """
@@ -30,6 +31,7 @@ def generate_financial_dataset(
     train / dev / test sets or used in only one of them.
     :param test_size: float between 0-1. A fraction of the dataset that should be used as test set.
     :param val_size: float between 0-1. A fraction of the dataset that should be used as validation set.
+    :param random_state: Seed used for generating random split of companies
     :param annotated_data_dir: path to the annotated data.
     :return: Train, val, test datasets. Each of them is a list of dict with items:
     {
@@ -60,6 +62,8 @@ def generate_financial_dataset(
     train_data = []
     val_data = []
     test_data = []
+
+    random.seed(random_state)
 
     # Shuffle companies means that the companies are shuffled between train / dev / test sets.
     # Here, the datasets are shuffled, but the company data stays together.
