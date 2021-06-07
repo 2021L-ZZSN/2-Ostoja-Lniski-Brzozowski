@@ -5,6 +5,8 @@ from src.models import MODEL_USED
 from src.models.metrics import compute_metrics
 from src.models.datasets import get_klej_datasets
 
+OUTPUT_DIR = "my_model"
+
 
 def main():
     tokenizer = AutoTokenizer.from_pretrained(MODEL_USED)
@@ -38,7 +40,7 @@ def main():
 
     trainer.train()
 
-    trainer.save_model("model_refactored")
+    trainer.save_model(OUTPUT_DIR)
 
     print(trainer.evaluate(eval_dataset=test_dataset))
 
