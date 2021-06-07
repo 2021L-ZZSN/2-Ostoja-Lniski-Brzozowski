@@ -1,8 +1,9 @@
 import numpy as np
 from sklearn import metrics
+from sklearn.metrics import classification_report, confusion_matrix
 
 
-def compute_metrics(eval_pred):
+def compute_metrics(eval_pred: tuple):
     logits, labels = eval_pred
     predictions = np.argmax(logits, axis=-1)
     return {
@@ -11,3 +12,15 @@ def compute_metrics(eval_pred):
         "precision": metrics.precision_score(y_pred=predictions, y_true=labels, average="weighted"),
         "accuracy": metrics.accuracy_score(y_pred=predictions, y_true=labels)
     }
+
+
+def get_classification_report(eval_pred: tuple):
+    logits, labels = eval_pred
+    predictions = np.argmax(logits, axis=-1)
+    return classification_report(labels, predictions)
+
+
+def get_confusion_matrix(eval_pred: tuple):
+    logits, labels = eval_pred
+    predictions = np.argmax(logits, axis=-1)
+    return confusion_matrix(labels, predictions)

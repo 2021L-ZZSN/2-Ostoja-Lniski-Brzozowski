@@ -1,21 +1,36 @@
-from transformers import AutoConfig, AutoTokenizer, BertForSequenceClassification
+from typing import Dict
+
+from transformers import PreTrainedModel
 
 from src.common.data_preparation import KlejType
-from src.models.datasets import get_klej_datasets
+from src.models.datasets import SentimentAnalysisDataset, get_klej_datasets
+from src.models.metrics import compute_metrics, get_classification_report, get_confusion_matrix
+from src.models.read import read_from_dir
+import numpy as np
+
 MODEL_PATH = "klej_model"
 
-print('Loading configuraiton...')
-model_config = AutoConfig.from_pretrained(MODEL_PATH)
-print('Loading tokenizer...')
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
+def _get_model_predictions(model: PreTrainedModel,
+                           encodings) -> np.array:
+    model.eval()
+    predictions = model(**encodings)
+    return predictions.logits.detach().numpy()
 
-print('Loading model...')
-model = BertForSequenceClassification.from_pretrained(MODEL_PATH,
-                                                      config=model_config)
 
-prompt = "Bardzo fajna restauracja polecam 10/10"
+def evaluate(
+        model: PreTrainedModel,
+        test_dataset: SentimentAnalysisDataset) -> Dict[str, float]:
+    encodings = test_dataset.encodings
+    labels = test_dataset.labels
+    predictions = _get_model_predictions(model, encodings)
+    eval_pred = (predictions, labels)
+    print(get_classification_report(eval_pred))
+    print(get_confusion_matrix(eval_pred))
+    return compute_metrics(eval_pred)
 
-encoding = tokenizer(prompt, truncation=True, padding=True, return_tensors="pt")
-outputs = model(**encoding)
-print(outputs)
+
+if __name__ == '__main__':
+    tokenizer, model = read_from_dir(MODEL_PATH)
+    _, _, test_dataset = get_klej_datasets(tokenizer, KlejType.IN)
+    print(evaluate(model, test_dataset))

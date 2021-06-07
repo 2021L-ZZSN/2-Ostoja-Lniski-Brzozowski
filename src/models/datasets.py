@@ -51,15 +51,15 @@ def get_klej_datasets(
     val_texts, val_labels = _get_texts_labels_from_data(val_data)
     test_texts, test_labels = _get_texts_labels_from_data(test_data)
 
-    label_mapper = {label: i for i, label in enumerate(set(klej_labels))}
+    label_mapper = {label: i for i, label in enumerate(klej_labels)}
 
     train_labels = [label_mapper[label] for label in train_labels]
     val_labels = [label_mapper[label] for label in val_labels]
     test_labels = [label_mapper[label] for label in test_labels]
 
-    train_encodings = tokenizer(train_texts, truncation=True, padding=True)
-    val_encodings = tokenizer(val_texts, truncation=True, padding=True)
-    test_encodings = tokenizer(test_texts, truncation=True, padding=True)
+    train_encodings = tokenizer(train_texts, truncation=True, padding=True, return_tensors="pt")
+    val_encodings = tokenizer(val_texts, truncation=True, padding=True, return_tensors="pt")
+    test_encodings = tokenizer(test_texts, truncation=True, padding=True, return_tensors="pt")
 
     train_dataset = SentimentAnalysisDataset(train_encodings, train_labels)
     val_dataset = SentimentAnalysisDataset(val_encodings, val_labels)
@@ -70,6 +70,6 @@ def get_klej_datasets(
 
 def _get_texts_labels_from_data(
         data: List[Dict[str, Union[str, int]]]) -> Tuple[List[str], List[int]]:
-    texts = [d["text"] for d in data]
-    labels = [d["label"] for d in data]
+    texts = [d["text"] for d in data][:10]
+    labels = [d["label"] for d in data][:10]
     return texts, labels
