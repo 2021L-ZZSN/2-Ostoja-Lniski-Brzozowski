@@ -1,23 +1,39 @@
 from transformers import AutoTokenizer, Trainer, BertForSequenceClassification, BertConfig, TrainingArguments
+
+from src.common.consts import RANDOM_STATE
 from src.common.data_preparation import KlejType, read_klej
 import torch
-
-MODEL_USED = "allegro/herbert-base-cased"
+from sklearn.model_selection import train_test_split
+from src.models import MODEL_USED
+VALIDATION_SIZE = 0.1
 tokenizer = AutoTokenizer.from_pretrained(MODEL_USED)
-klej_in = read_klej(KlejType.IN)
+klej_in = read_klej(KlejType.IN, ("positive", "negative", "neutral"))
 train_data, test_data = klej_in["train"], klej_in["dev"]
+
+train_data, val_data = train_test_split(
+    train_data,
+    test_size=VALIDATION_SIZE,
+    random_state=RANDOM_STATE,
+    stratify=[d["label"] for d in train_data])
+
 train_texts = [d["text"] for d in train_data]
 train_labels = [d["label"] for d in train_data]
 
-label_mapper = {label: i for i, label in enumerate(set(train_labels))}
+val_texts = [d["text"] for d in train_data]
+val_labels = [d["label"] for d in train_data]
+
 
 test_texts = [d["text"] for d in test_data]
 test_labels = [d["label"] for d in test_data]
 
+label_mapper = {label: i for i, label in enumerate(set(test_labels))}
+
 train_labels = [label_mapper[label] for label in train_labels]
+val_labels = [label_mapper[label] for label in val_labels]
 test_labels = [label_mapper[label] for label in test_labels]
 
 train_encodings = tokenizer(train_texts, truncation=True, padding=True)
+val_encodings = tokenizer(val_texts, truncation=True, padding=True)
 test_encodings = tokenizer(test_texts, truncation=True, padding=True)
 
 
@@ -36,6 +52,7 @@ class KlejDataset(torch.utils.data.Dataset):
 
 
 train_dataset = KlejDataset(train_encodings, train_labels)
+val_dataset = KlejDataset(val_encodings, val_labels)
 test_dataset = KlejDataset(test_encodings, test_labels)
 
 training_args = TrainingArguments(
@@ -49,18 +66,14 @@ training_args = TrainingArguments(
     logging_steps=10,
 )
 
+model = BertForSequenceClassification.from_pretrained(MODEL_USED, num_labels=3)
 
-config = BertConfig.from_pretrained(MODEL_USED)
-config.num_labels = 4
-model = BertForSequenceClassification(config)
-print(model.parameters)
-# exit()
 
 trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above
     train_dataset=train_dataset,         # training dataset
-    eval_dataset=test_dataset            # evaluation dataset
+    eval_dataset=val_dataset             # evaluation dataset
 )
 
 trainer.train()
