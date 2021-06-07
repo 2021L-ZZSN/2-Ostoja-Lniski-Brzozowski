@@ -68,8 +68,18 @@ def get_klej_datasets(
     return train_dataset, val_dataset, test_dataset
 
 
+def get_klej_test_set(
+        klej_type: KlejType,
+        klej_labels: Tuple[str, ...] = ("positive", "negative", "neutral")) -> Tuple[List[str], List[int]]:
+    klej = read_klej(klej_type, klej_labels)
+    label_mapper = {label: i for i, label in enumerate(klej_labels)}
+    test_data = klej["dev"]
+    test_texts, test_labels = _get_texts_labels_from_data(test_data)
+    return test_texts, [label_mapper[label] for label in test_labels]
+
+
 def _get_texts_labels_from_data(
         data: List[Dict[str, Union[str, int]]]) -> Tuple[List[str], List[int]]:
-    texts = [d["text"] for d in data]
-    labels = [d["label"] for d in data]
+    texts = [d["text"] for d in data][:10]
+    labels = [d["label"] for d in data][:10]
     return texts, labels
