@@ -48,8 +48,13 @@ def generate_financial_dataset(
 
     if not shuffle_companies:
         company_names = [company_name for company_name in annotated_companies]
+        # Shuffle companies means that the companies are shuffled between train / dev / test sets.
+        # Here, the datasets are shuffled, but the company data stays together.
+        # So the result will be that company A is in train set, company B is in dev set,
+        # company C is in test set.
         random.shuffle(company_names)
-        test_data_amount = pass
+        test_data_amount = test_size * data_counter
+        val_data_amount = val_size * data_counter
 
     if shuffle_companies:
         annotated_data = []
