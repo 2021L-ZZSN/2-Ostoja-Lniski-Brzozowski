@@ -42,6 +42,8 @@ def main():
 
     trainer.save_model(OUTPUT_DIR)
 
+    tokenizer.save_pretrained(OUTPUT_DIR)
+
     print(trainer.evaluate(eval_dataset=test_dataset))
 
 
