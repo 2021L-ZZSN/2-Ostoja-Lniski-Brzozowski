@@ -42,7 +42,7 @@ def main(
         )
     else:
         test_dataset = get_financial_test_set(
-            shuffle_companies=True if "mixed" in test_dataset else False,
+            shuffle_companies="mixed" in test_dataset,
             positive_threshold=POSITIVE_THRESHOLD,
             negative_threshold=NEGATIVE_THRESHOLD
         )
