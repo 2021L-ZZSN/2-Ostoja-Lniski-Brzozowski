@@ -12,7 +12,7 @@ NEGATIVE_THRESHOLD = -0.05
 
 @click.command()
 @click.option(
-    "-i",
+    "-o",
     "--output_dir",
     type=STRING,
     required=True,
