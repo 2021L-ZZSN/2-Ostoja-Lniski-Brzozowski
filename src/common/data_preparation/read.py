@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Union, Tuple
 
 
 class KlejType(Enum):
@@ -20,11 +20,15 @@ KLEJ_FILE_LABEL_TO_LABEL = {
 }
 
 
-def read_klej(klej_type: KlejType) -> Dict[str, List[Dict[str, Union[str, int]]]]:
+def read_klej(
+        klej_type: KlejType,
+        labels_to_return: Tuple[str, ...]
+) -> Dict[str, List[Dict[str, Union[str, int]]]]:
     """
     Reads klej dataset from klej_polemo2.0.
     :param klej_type: KlejType.IN or KlejType.OUT.
-    :return: Train, dev, test data in a form of:
+    :param labels_to_return: List of labels to return. Possible values: "amb", "positive", "neutral", "negative".
+    :return: Train, dev data in a form of:
     {
         "train": [
             {
@@ -41,19 +45,23 @@ def read_klej(klej_type: KlejType) -> Dict[str, List[Dict[str, Union[str, int]]]
     """
     dir_path = KLEJ_TYPE_TO_PATH.get(klej_type)
     return {
-        'train': _read_klej_file(f'{dir_path}/train.tsv'),
-        'dev': _read_klej_file(f'{dir_path}/dev.tsv')
+        'train': _read_klej_file(f'{dir_path}/train.tsv', labels_to_return=labels_to_return),
+        'dev': _read_klej_file(f'{dir_path}/dev.tsv', labels_to_return=labels_to_return)
     }
 
 
-def _read_klej_file(filepath: str) -> List[Dict[str, Union[str, int]]]:
+def _read_klej_file(
+        filepath: str,
+        labels_to_return: Tuple[str, ...]) -> List[Dict[str, Union[str, int]]]:
     result = []
     with open(filepath, "r") as f:
         lines = f.readlines()[1:]  # first line contains column names
         for line in lines:
             text, label = line.split('\t')
-            result.append({
-                "text": text.strip(),
-                "label": KLEJ_FILE_LABEL_TO_LABEL.get(label.strip())
-            })
+            label = KLEJ_FILE_LABEL_TO_LABEL.get(label.strip())
+            if label in labels_to_return:
+                result.append({
+                    "text": text.strip(),
+                    "label": label
+                })
     return result
