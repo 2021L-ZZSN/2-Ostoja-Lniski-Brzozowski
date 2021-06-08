@@ -3,6 +3,9 @@ beautifulsoup4~=4.9.3
 requests~=2.25.1
 tqdm~=4.59.0
 click~=7.1.2
-bs4~=4.9.3
-pytorch
+bs4~=4.6.3
+torch
+torchvision
+torchaudio
+scikit-learn
 transformers
