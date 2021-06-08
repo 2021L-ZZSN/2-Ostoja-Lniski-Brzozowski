@@ -1,13 +1,11 @@
+import click
 from click import STRING, INT
 from transformers import AutoTokenizer, Trainer, BertForSequenceClassification, TrainingArguments
-import click
+
 from src.common.data_preparation import KlejType
 from src.models import MODEL_USED
-from src.models.metrics import compute_metrics
 from src.models.datasets import KlejDataset, FinancialDataset
-
-POSITIVE_THRESHOLD = 0.05
-NEGATIVE_THRESHOLD = -0.05
+from src.models.metrics import compute_metrics
 
 
 @click.command()
@@ -71,8 +69,6 @@ def main(
         if "klej" in train_dataset
         else FinancialDataset(
             tokenizer=tokenizer,
-            positive_threshold=POSITIVE_THRESHOLD,
-            negative_threshold=NEGATIVE_THRESHOLD,
             shuffle_companies="mixed" in train_dataset
         )
     )
