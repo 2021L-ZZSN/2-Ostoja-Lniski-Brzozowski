@@ -36,8 +36,8 @@ def evaluate(
     if not texts:
         return {}
     predictions = []
-    stop = len(texts) if len(texts) % batch_size == 0 else len(texts) + batch_size
-    for i in tqdm(range(0, stop, batch_size)):
+
+    for i in tqdm(range(0, len(texts), batch_size)):
         texts_batch = texts[i: i + batch_size]
         prediction = _gather_prediction(texts_batch, tokenizer, model)
         predictions.append(prediction)
