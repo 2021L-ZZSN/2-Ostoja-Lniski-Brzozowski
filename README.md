@@ -10,7 +10,7 @@ jak i [danych finansowych](data/annotated) składających się z pobranych z [ra
 ---
 ## Przygotowanie środowiska
 1. Przed uruchomieniem projektu, należy utworzyć środowisko wirualne za pomocą anacondy.
-2. Następnie będąc już w aktywowanym środowisku należy zainstalować zależności z pliku requirements.txt
+2. Następnie będąc już w aktywowanym środowisku należy zainstalować zależności z pliku [requirements.txt](requirements.txt)
 ## Jak użyć?
 Dwa najważniejsze dla użytkownika skrypty znajdują się w folderze [src/scripts/models](src/scripts/models/).
 
