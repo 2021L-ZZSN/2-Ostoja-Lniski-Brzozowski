@@ -2,6 +2,8 @@ import numpy as np
 from sklearn import metrics
 from sklearn.metrics import classification_report, confusion_matrix
 
+from src.models.datasets import DEFAULT_POSSIBLE_LABELS
+
 
 def compute_metrics(eval_pred: tuple):
     logits, labels = eval_pred
@@ -17,7 +19,9 @@ def compute_metrics(eval_pred: tuple):
 def get_classification_report(eval_pred: tuple):
     logits, labels = eval_pred
     predictions = np.argmax(logits, axis=-1)
-    return classification_report(labels, predictions)
+    # If our default 3 values are used, show target names, if not - don't
+    target_names = DEFAULT_POSSIBLE_LABELS if len(logits) and len(logits[0]) == 3 else None
+    return classification_report(labels, predictions, target_names=target_names)
 
 
 def get_confusion_matrix(eval_pred: tuple):

@@ -3,9 +3,11 @@ from typing import Tuple, Dict, Union, List
 import torch
 from abc import ABC, abstractmethod
 from sklearn.model_selection import train_test_split
+from transformers import PreTrainedTokenizer
 
 from src.common.data_preparation import read_klej, KlejType, generate_financial_dataset
 
+DEFAULT_POSSIBLE_LABELS = ("positive", "negative", "neutral")
 TorchDataset = torch.utils.data.Dataset
 DatasetLike = List[Dict[str, Union[str, int]]]
 
@@ -26,8 +28,13 @@ class SentimentAnalysisDataset(TorchDataset):
 
 class Dataset(ABC):
 
-    def __init__(self, tokenizer):
-        self.tokenizer = tokenizer
+    def __init__(
+            self,
+            tokenizer: PreTrainedTokenizer,
+            possible_labels: Tuple[str, ...]):
+        self._tokenizer = tokenizer
+        self._possible_labels = possible_labels
+        self._label_mapper = {label: i for i, label in enumerate(possible_labels)}
 
     def prepare_data_sets(
             self,
@@ -47,15 +54,13 @@ class Dataset(ABC):
         val_texts, val_labels = _get_texts_labels_from_data(val_data)
         test_texts, test_labels = _get_texts_labels_from_data(test_data)
 
-        label_mapper = {label: i for i, label in enumerate(("positive", "negative", "neutral"))}
+        train_labels = [self._label_mapper[label] for label in train_labels]
+        val_labels = [self._label_mapper[label] for label in val_labels]
+        test_labels = [self._label_mapper[label] for label in test_labels]
 
-        train_labels = [label_mapper[label] for label in train_labels]
-        val_labels = [label_mapper[label] for label in val_labels]
-        test_labels = [label_mapper[label] for label in test_labels]
-
-        train_encodings = self.tokenizer(train_texts, truncation=True, padding=True)
-        val_encodings = self.tokenizer(val_texts, truncation=True, padding=True)
-        test_encodings = self.tokenizer(test_texts, truncation=True, padding=True)
+        train_encodings = self._tokenizer(train_texts, truncation=True, padding=True)
+        val_encodings = self._tokenizer(val_texts, truncation=True, padding=True)
+        test_encodings = self._tokenizer(test_texts, truncation=True, padding=True)
 
         train_dataset = SentimentAnalysisDataset(train_encodings, train_labels)
         val_dataset = SentimentAnalysisDataset(val_encodings, val_labels)
@@ -72,31 +77,30 @@ class KlejDataset(Dataset):
 
     def __init__(
             self,
-            tokenizer,
+            tokenizer: PreTrainedTokenizer,
             klej_type: KlejType,
-            klej_labels: Tuple[str, ...] = ("positive", "negative", "neutral"),
+            possible_labels: Tuple[str, ...] = DEFAULT_POSSIBLE_LABELS,
             validation_size: float = 0.1,
             random_state: int = 42):
         """
         :param tokenizer: Transformers tokenizer.
         :param klej_type: One of KlejType values.
-        :param klej_labels: Tuple of klej type labels that will be used for the training / eval.
+        :param possible_labels: Tuple of klej type labels that will be used for the training / eval.
         :param validation_size: A part of training dataset that will be used as validation set.
         :param random_state: random state that makes the experiments repeatable.
         """
         self.klej_type = klej_type
-        self.klej_labels = klej_labels
         self.validation_size = validation_size
         self.random_state = random_state
 
-        super().__init__(tokenizer)
+        super().__init__(tokenizer, possible_labels)
 
     def get(self) -> Tuple[SentimentAnalysisDataset, SentimentAnalysisDataset, SentimentAnalysisDataset]:
         """
         Returns train, dev, test datasets generated from klej_dataset ready to pass into Trainer API for transformers.
         :return: Tuple of datasets objects in order: Train, Dev, Test.
         """
-        klej_in = read_klej(self.klej_type, self.klej_labels)
+        klej_in = read_klej(self.klej_type, self._possible_labels)
         train_data, test_data = klej_in["train"], klej_in["dev"]
 
         train_data, val_data = train_test_split(
@@ -112,7 +116,8 @@ class FinancialDataset(Dataset):
 
     def __init__(
             self,
-            tokenizer,
+            tokenizer: PreTrainedTokenizer,
+            possible_labels: Tuple[str, ...] = DEFAULT_POSSIBLE_LABELS,
             positive_threshold: float = 0.2,
             negative_threshold: float = -0.2,
             shuffle_companies: bool = False,
@@ -132,15 +137,15 @@ class FinancialDataset(Dataset):
         :param annotated_data_dir: path to the annotated data.
         """
 
-        self.positive_threshold = positive_threshold
-        self.negative_threshold = negative_threshold
-        self.shuffle_companies = shuffle_companies
-        self.test_size = test_size
-        self.val_size = val_size
-        self.random_state = random_state
-        self.annotated_data_dir = annotated_data_dir
+        self._positive_threshold = positive_threshold
+        self._negative_threshold = negative_threshold
+        self._shuffle_companies = shuffle_companies
+        self._test_size = test_size
+        self._val_size = val_size
+        self._random_state = random_state
+        self._annotated_data_dir = annotated_data_dir
 
-        super().__init__(tokenizer)
+        super().__init__(tokenizer, possible_labels)
 
     def get(self) -> Tuple[SentimentAnalysisDataset, SentimentAnalysisDataset, SentimentAnalysisDataset]:
         """
@@ -148,21 +153,44 @@ class FinancialDataset(Dataset):
         :return: Tuple of datasets objects in order: Train, Dev, Test.
         """
 
-        train_data, test_data, val_data = generate_financial_dataset(self.positive_threshold, self.negative_threshold,
-                                                                     self.shuffle_companies, self.test_size,
-                                                                     self.val_size, self.random_state,
-                                                                     self.annotated_data_dir)
+        train_data, test_data, val_data = generate_financial_dataset(
+            positive_threshold=self._positive_threshold,
+            negative_threshold=self._negative_threshold,
+            shuffle_companies=self._shuffle_companies,
+            test_size=self._test_size,
+            val_size=self._val_size,
+            random_state=self._random_state,
+            possible_labels=self._possible_labels,
+            annotated_data_dir=self._annotated_data_dir)
         return super().prepare_data_sets(train_data, test_data, val_data)
 
 
 def get_klej_test_set(
         klej_type: KlejType,
-        klej_labels: Tuple[str, ...] = ("positive", "negative", "neutral")) -> Tuple[List[str], List[int]]:
-    klej = read_klej(klej_type, klej_labels)
-    label_mapper = {label: i for i, label in enumerate(klej_labels)}
+        possible_labels: Tuple[str, ...] = DEFAULT_POSSIBLE_LABELS) -> Tuple[List[str], List[int]]:
+    klej = read_klej(klej_type, possible_labels)
+    label_mapper = {label: i for i, label in enumerate(possible_labels)}
     test_data = klej["dev"]
     test_texts, test_labels = _get_texts_labels_from_data(test_data)
     return test_texts, [label_mapper[label] for label in test_labels]
+
+
+def get_financial_test_set(
+        shuffle_companies: bool,
+        positive_threshold: float,
+        negative_threshold: float,
+        possible_labels: Tuple[str, ...] = DEFAULT_POSSIBLE_LABELS
+) -> Tuple[List[str], List[int]]:
+    _, _, test_data = generate_financial_dataset(
+        positive_threshold=positive_threshold,
+        negative_threshold=negative_threshold,
+        shuffle_companies=shuffle_companies,
+        possible_labels=possible_labels
+    )
+    label_mapper = {label: i for i, label in enumerate(possible_labels)}
+    test_texts = [sample["text"] for sample in test_data]
+    test_labels = [label_mapper[sample["label"]] for sample in test_data]
+    return test_texts, test_labels
 
 
 def _get_texts_labels_from_data(

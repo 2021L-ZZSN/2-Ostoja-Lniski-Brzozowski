@@ -22,7 +22,7 @@ KLEJ_FILE_LABEL_TO_LABEL = {
 
 def read_klej(
         klej_type: KlejType,
-        labels_to_return: Tuple[str, ...] = ("amb", "positive", "neutral", "negative")
+        labels_to_return: Tuple[str, ...]
 ) -> Dict[str, List[Dict[str, Union[str, int]]]]:
     """
     Reads klej dataset from klej_polemo2.0.

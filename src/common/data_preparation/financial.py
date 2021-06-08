@@ -1,23 +1,19 @@
-from typing import Dict, Union, List, Tuple
 import os
-from random import shuffle, random
 import random
+from typing import Dict, Union, List, Tuple
 
 from sklearn.model_selection import train_test_split
 
 from src.common.utils.files_io import load_json
 
-
-
 DatasetLike = List[Dict[str, Union[str, int]]]
-
-ENDING_CHARS_LEN = len("_annotated.json")
 
 
 def generate_financial_dataset(
         positive_threshold: float,
         negative_threshold: float,
         shuffle_companies: bool,
+        possible_labels: Tuple[str, ...],
         test_size: float = 0.2,
         val_size: float = 0.1,
         random_state: int = 42,
@@ -25,6 +21,7 @@ def generate_financial_dataset(
 ) -> Tuple[DatasetLike, DatasetLike, DatasetLike]:
     """
     Generates a tuple of datasets
+    :param possible_labels: labels not included in possible labels will not be taken into account.
     :param positive_threshold: A threshold for "sentiment" attribute from which
     we say that the StockExchangeDispatch is a positive one.
     :param negative_threshold: A threshold for "sentiment" attribute to which
@@ -50,21 +47,17 @@ def generate_financial_dataset(
     annotated_companies_data: Dict[str, DatasetLike] = {}  # name of a company to dataset.
     for filename in os.listdir(annotated_data_dir):
         file_path = f"{annotated_data_dir}/{filename}"
-        annotated_companies = load_json(file_path)
+        annotated_company = load_json(file_path)
 
-        for annotated_company in annotated_companies:
-            company_name, content, sentiment = _read_single_annotated_data_file(
-                annotated_company, positive_threshold, negative_threshold)
+        for annotated_company_row in annotated_company:
+            company_name, content, label = _read_single_annotated_data_row(
+                annotated_company_row, positive_threshold, negative_threshold)
 
             if company_name not in annotated_companies_data.keys():
                 annotated_companies_data[company_name] = []
-
-            annotated_companies_data[company_name].append({'text': content, 'label': sentiment})
-            annotated_data_num += 1
-
-    train_data = []
-    val_data = []
-    test_data = []
+            if label in possible_labels:
+                annotated_companies_data[company_name].append({'text': content, 'label': label})
+                annotated_data_num += 1
 
     random.seed(random_state)
 
@@ -77,21 +70,33 @@ def generate_financial_dataset(
         random.shuffle(company_names)
 
         next_id = 0
-        next_id, test_data = _get_non_shuffled_required_data(annotated_companies_data, company_names,
-                                                             next_id, annotated_data_num * test_size)
+        next_id, test_data = _get_non_shuffled_required_data(
+            annotated_companies_data=annotated_companies_data,
+            companies=company_names,
+            company_id=next_id,
+            possible_labels=possible_labels,
+            requirement=annotated_data_num * test_size)
 
-        next_id, val_data = _get_non_shuffled_required_data(annotated_companies_data, company_names,
-                                                            next_id, annotated_data_num * val_size)
+        next_id, val_data = _get_non_shuffled_required_data(
+            annotated_companies_data=annotated_companies_data,
+            companies=company_names,
+            company_id=next_id,
+            possible_labels=possible_labels,
+            requirement=annotated_data_num * val_size)
 
-        _, train_data = _get_non_shuffled_required_data(annotated_companies_data, company_names,
-                                                        next_id, annotated_data_num)
+        _, train_data = _get_non_shuffled_required_data(
+            annotated_companies_data=annotated_companies_data,
+            companies=company_names,
+            company_id=next_id,
+            possible_labels=possible_labels,
+            requirement=annotated_data_num)
 
         return train_data, test_data, val_data
 
     if shuffle_companies:
         annotated_data = []
-        for annotated_company in annotated_companies_data:
-            annotated_data.extend(annotated_companies_data[annotated_company])
+        for annotated_company_row in annotated_companies_data:
+            annotated_data.extend(annotated_companies_data[annotated_company_row])
         random.shuffle(annotated_data)
 
         train_and_test, val_data = train_test_split(
@@ -110,7 +115,7 @@ def generate_financial_dataset(
         return train_data, test_data, val_data
 
 
-def _read_single_annotated_data_file(
+def _read_single_annotated_data_row(
         annotated_company: dict,
         positive_threshold: float,
         negative_threshold: float):
@@ -133,6 +138,7 @@ def _get_non_shuffled_required_data(
         annotated_companies_data: Dict[str, DatasetLike],
         companies: list,
         company_id: int,
+        possible_labels: Tuple[str, ...],
         requirement: float):
     """
     Returns data starting from a company of given id, until requirement is met
@@ -147,7 +153,8 @@ def _get_non_shuffled_required_data(
     while current_data_size < requirement and company_id < len(companies):
         company_name = companies[company_id]
         annotated_info = annotated_companies_data[company_name]
-        companies_data += _generate_company_full_data(annotated_companies_data, company_name)
+        companies_data += _generate_company_full_data(
+            annotated_companies_data, company_name, possible_labels)
 
         current_data_size += len(annotated_info)
         company_id += 1
@@ -157,7 +164,8 @@ def _get_non_shuffled_required_data(
 
 def _generate_company_full_data(
         annotated_companies_data: Dict[str, DatasetLike],
-        company_name: str
+        company_name: str,
+        possible_labels: Tuple[str, ...]
 ):
     """
     Returns full annotated information for given company name
@@ -168,26 +176,11 @@ def _generate_company_full_data(
 
     company_full_data = []
     for company_data in annotated_companies_data[company_name]:
-        company_full_data.append({'text': company_data['text'],
-                                  'label': company_data['label']})
+        if company_data['label'] in possible_labels:
+            company_full_data.append({'text': company_data['text'],
+                                      'label': company_data['label']})
 
     return company_full_data
-
-
-def _create_labels_for_data(
-        positive_threshold: float,
-        negative_threshold: float,
-        dataset: DatasetLike) -> DatasetLike:
-    return [
-        {
-            "text": sample["text"],
-            "label": _apply_label_for_sentiment(
-                sentiment=sample["sentiment"],
-                positive_threshold=positive_threshold,
-                negative_threshold=negative_threshold)
-        }
-        for sample in dataset
-    ]
 
 
 def _apply_label_for_sentiment(
@@ -201,7 +194,3 @@ def _apply_label_for_sentiment(
     if negative_threshold < sentiment < positive_threshold:
         return "neutral"
     return "positive"
-
-
-if __name__ == '__main__':
-    generate_financial_dataset(0.05, negative_threshold=-0.05, shuffle_companies=False)
