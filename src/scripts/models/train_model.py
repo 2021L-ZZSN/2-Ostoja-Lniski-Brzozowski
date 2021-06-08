@@ -5,10 +5,20 @@ from src.common.data_preparation import KlejType
 from src.models import MODEL_USED
 from src.models.metrics import compute_metrics
 from src.models.datasets import KlejDataset, FinancialDataset
-
+import torch
 POSITIVE_THRESHOLD = 0.05
 NEGATIVE_THRESHOLD = -0.05
 
+
+class MultilabelTrainer(Trainer):
+    def compute_loss(self, model, inputs, return_outputs=False):
+        labels = inputs.pop("labels")
+        outputs = model(**inputs)
+        logits = outputs.logits
+        loss_fct = torch.nn.BCEWithLogitsLoss()
+        loss = loss_fct(logits.view(-1, self.model.config.num_labels),
+                        labels.float().view(-1, self.model.config.num_labels))
+        return (loss, outputs) if return_outputs else loss
 
 @click.command()
 @click.option(
@@ -78,7 +88,7 @@ def main(
     )
     train, val, test = dataset.get()
 
-    trainer = Trainer(
+    trainer = MultilabelTrainer(
         model=model,
         args=training_args,
         train_dataset=train,
