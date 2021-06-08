@@ -7,6 +7,8 @@ from transformers import PreTrainedTokenizer
 
 from src.common.data_preparation import read_klej, KlejType, generate_financial_dataset
 
+POSITIVE_THRESHOLD = 0.04
+NEGATIVE_THRESHOLD = -0.07
 DEFAULT_POSSIBLE_LABELS = ("positive", "negative", "neutral")
 TorchDataset = torch.utils.data.Dataset
 DatasetLike = List[Dict[str, Union[str, int]]]
@@ -118,8 +120,8 @@ class FinancialDataset(Dataset):
             self,
             tokenizer: PreTrainedTokenizer,
             possible_labels: Tuple[str, ...] = DEFAULT_POSSIBLE_LABELS,
-            positive_threshold: float = 0.2,
-            negative_threshold: float = -0.2,
+            positive_threshold: float = POSITIVE_THRESHOLD,
+            negative_threshold: float = NEGATIVE_THRESHOLD,
             shuffle_companies: bool = False,
             test_size: float = 0.2,
             val_size: float = 0.1,
@@ -177,8 +179,8 @@ def get_klej_test_set(
 
 def get_financial_test_set(
         shuffle_companies: bool,
-        positive_threshold: float,
-        negative_threshold: float,
+        positive_threshold: float = POSITIVE_THRESHOLD,
+        negative_threshold: float = NEGATIVE_THRESHOLD,
         possible_labels: Tuple[str, ...] = DEFAULT_POSSIBLE_LABELS
 ) -> Tuple[List[str], List[int]]:
     _, _, test_data = generate_financial_dataset(

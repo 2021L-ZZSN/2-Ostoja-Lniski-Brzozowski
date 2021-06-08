@@ -71,8 +71,6 @@ def main(
         if "klej" in train_dataset
         else FinancialDataset(
             tokenizer=tokenizer,
-            positive_threshold=POSITIVE_THRESHOLD,
-            negative_threshold=NEGATIVE_THRESHOLD,
             shuffle_companies="mixed" in train_dataset
         )
     )
