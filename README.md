@@ -6,7 +6,7 @@ Celem projektu jest wykorzystanie polskiego modelu typu BERT (np. Herbert albo P
 - Projekt zawiera skrypty do trenowania oraz ewaluacji modeli opartych na BERT (Herbert) do oceny wydźwięku.
 - Przygotowane zbiory oraz kod pozwalają na uruchomienie trenowania modelu na danych pochodzących ze zbioru [Klej](https://klejbenchmark.com/tasks/#polemo2.0-in)
 jak i [danych finansowych](data/annotated) składających się z pobranych z [raportów spółek ESPI](http://infostrefa.com/infostrefa/pl/raporty/espi/biezace,0,0,0,1) depesz giełdowych oraz kursów akcji z platformy [quandl](https://www.quandl.com/data/WSE-Warsaw-Stock-Exchange-GPW).
-- Wygenerowanie powyższych było częścią projektu.
+- Pobranie, przeparsowanie oraz przetworzenie powyższych danych było częścią projektu.
 ---
 ## Przygotowanie środowiska
 1. Przed uruchomieniem projektu, należy utworzyć środowisko wirualne za pomocą anacondy.
