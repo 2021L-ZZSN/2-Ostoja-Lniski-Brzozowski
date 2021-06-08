@@ -6,9 +6,6 @@ from src.models import MODEL_USED
 from src.models.metrics import compute_metrics
 from src.models.datasets import KlejDataset, FinancialDataset
 
-POSITIVE_THRESHOLD = 0.05
-NEGATIVE_THRESHOLD = -0.05
-
 
 @click.command()
 @click.option(

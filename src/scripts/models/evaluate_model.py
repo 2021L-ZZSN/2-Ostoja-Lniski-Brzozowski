@@ -6,9 +6,6 @@ from src.models import read_from_dir
 from src.models.datasets import get_klej_test_set, get_financial_test_set
 from src.models.eval import evaluate
 
-POSITIVE_THRESHOLD = 0.05
-NEGATIVE_THRESHOLD = -0.05
-
 
 @click.command()
 @click.option(
