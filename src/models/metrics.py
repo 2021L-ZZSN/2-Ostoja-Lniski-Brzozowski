@@ -8,7 +8,6 @@ from src.models.datasets import DEFAULT_POSSIBLE_LABELS
 def compute_metrics(eval_pred: tuple):
     logits, labels = eval_pred
     predictions = np.argmax(logits, axis=-1)
-    print(get_confusion_matrix((predictions, labels)))
     return {
         "f1": metrics.f1_score(y_pred=predictions, y_true=labels, average="macro"),
         "recall": metrics.recall_score(y_pred=predictions, y_true=labels, average="macro"),
