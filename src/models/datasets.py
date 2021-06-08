@@ -4,7 +4,7 @@ import torch
 from abc import ABC, abstractmethod
 from sklearn.model_selection import train_test_split
 from transformers import PreTrainedTokenizer
-
+from random import shuffle
 from src.common.data_preparation import read_klej, KlejType, generate_financial_dataset
 
 DEFAULT_POSSIBLE_LABELS = ("positive", "negative", "neutral")
@@ -120,6 +120,7 @@ class FinancialDataset(Dataset):
             possible_labels: Tuple[str, ...] = DEFAULT_POSSIBLE_LABELS,
             positive_threshold: float = 0.2,
             negative_threshold: float = -0.2,
+            equal_amount_of_samples: bool = True,
             shuffle_companies: bool = False,
             test_size: float = 0.2,
             val_size: float = 0.1,
@@ -136,7 +137,7 @@ class FinancialDataset(Dataset):
         :param random_state: Seed used for generating random split of companies
         :param annotated_data_dir: path to the annotated data.
         """
-
+        self._equal_samples = equal_amount_of_samples
         self._positive_threshold = positive_threshold
         self._negative_threshold = negative_threshold
         self._shuffle_companies = shuffle_companies
@@ -162,6 +163,20 @@ class FinancialDataset(Dataset):
             random_state=self._random_state,
             possible_labels=self._possible_labels,
             annotated_data_dir=self._annotated_data_dir)
+        if self._equal_samples:
+            min_class_samples_train = min(
+                len([sample for sample in train_data if sample["label"] == label])
+                for label in self._possible_labels
+            )
+            print(min_class_samples_train)
+            class_counts = {label: 0 for label in self._possible_labels}
+            new_train = []
+            for sample in train_data:
+                if class_counts[sample["label"]] < min_class_samples_train:
+                    new_train.append(sample)
+                    class_counts[sample["label"]] += 1
+            train_data = new_train
+            shuffle(train_data)
         return super().prepare_data_sets(train_data, test_data, val_data)
 
 
