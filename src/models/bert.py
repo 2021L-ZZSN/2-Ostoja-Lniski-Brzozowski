@@ -13,7 +13,7 @@ def main():
 
     # dataset = KlejDataset(tokenizer=tokenizer, klej_type=KlejType.IN)
     dataset = FinancialDataset(tokenizer=tokenizer, positive_threshold=0.012, negative_threshold=-0.033,
-                               shuffle_companies=False)
+                               shuffle_companies=True)
     train_dataset, val_dataset, test_dataset = dataset.get()
 
     training_args = TrainingArguments(

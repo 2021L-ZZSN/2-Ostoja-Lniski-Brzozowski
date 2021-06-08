@@ -2,6 +2,9 @@ from typing import Dict, Union, List, Tuple
 import os
 from random import shuffle, random
 import random
+
+from sklearn.model_selection import train_test_split
+
 from src.common.utils.files_io import load_json
 
 
@@ -90,6 +93,21 @@ def generate_financial_dataset(
         for annotated_company in annotated_companies_data:
             annotated_data.extend(annotated_companies_data[annotated_company])
         random.shuffle(annotated_data)
+
+        train_and_test, val_data = train_test_split(
+            annotated_data,
+            test_size=val_size,
+            random_state=random_state,
+            stratify=[d["label"] for d in annotated_data])
+
+        test_size = (test_size / (1 - val_size))
+        train_data, test_data = train_test_split(
+            train_and_test,
+            test_size=test_size,
+            random_state=random_state,
+            stratify=[d["label"] for d in train_and_test])
+
+        return train_data, test_data, val_data
 
 
 def _read_single_annotated_data_file(
